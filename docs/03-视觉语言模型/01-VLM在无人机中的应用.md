@@ -34,6 +34,76 @@ graph TD
     G --> B
 ```
 
+### 1.3 实际 API 调用示例
+
+以下是使用 GPT-4V / GPT-4o 进行无人机航拍图像理解的真实 API 调用代码：
+
+```python
+import base64
+from openai import OpenAI
+
+client = OpenAI()  # 从环境变量读取 OPENAI_API_KEY
+
+# 将本地图像编码为 base64
+with open("drone_view.jpg", "rb") as f:
+    image_b64 = base64.b64encode(f.read()).decode()
+
+response = client.chat.completions.create(
+    model="gpt-4o",
+    messages=[{
+        "role": "user",
+        "content": [
+            {
+                "type": "text",
+                "text": "Describe obstacles visible for drone navigation. "
+                        "For each obstacle, estimate its position (left/center/right, near/far), "
+                        "approximate size, and whether it poses an immediate collision risk."
+            },
+            {
+                "type": "image_url",
+                "image_url": {
+                    "url": f"data:image/jpeg;base64,{image_b64}"
+                }
+            }
+        ]
+    }],
+    max_tokens=500
+)
+
+print(response.choices[0].message.content)
+```
+
+使用 URL 图像（适合从无人机流媒体地址直接分析）：
+
+```python
+import anthropic
+
+client = anthropic.Anthropic()  # 从环境变量读取 ANTHROPIC_API_KEY
+
+message = client.messages.create(
+    model="claude-sonnet-4-6",
+    max_tokens=500,
+    messages=[{
+        "role": "user",
+        "content": [
+            {
+                "type": "image",
+                "source": {
+                    "type": "url",
+                    "url": "http://192.168.1.100:8080/stream/current_frame.jpg"
+                }
+            },
+            {
+                "type": "text",
+                "text": "这张无人机航拍图像中有哪些障碍物？请标注每个障碍物的位置和危险等级。"
+            }
+        ]
+    }]
+)
+
+print(message.content[0].text)
+```
+
 ---
 
 ## 2. 场景理解

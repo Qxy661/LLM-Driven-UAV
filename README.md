@@ -163,6 +163,17 @@ LLM-Driven-UAV/
 
 ---
 
+## 相关项目
+
+本项目是 [Qxy661](https://github.com/Qxy661) 无人机教学文档系列之一：
+
+| 项目 | 说明 | GitHub |
+|------|------|--------|
+| Simulink-UAV-Dynamics-Sim | Simulink无人机动力学仿真+PX4对接 | [Qxy661/Simulink-UAV-Dynamics-Sim](https://github.com/Qxy661/Simulink-UAV-Dynamics-Sim) |
+| UAV-Control-Theory | 飞行控制理论 | [Qxy661/UAV-Control-Theory](https://github.com/Qxy661/UAV-Control-Theory) |
+| RL-Autonomous-Flight | 强化学习自主飞行 | [Qxy661/RL-Autonomous-Flight](https://github.com/Qxy661/RL-Autonomous-Flight) |
+| UAV-Comm-DataLink | 无人机通信与数据链 | [Qxy661/UAV-Comm-DataLink](https://github.com/Qxy661/UAV-Comm-DataLink) |
+
 ## 许可证
 
 本项目采用 [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/) 许可，欢迎学习与分享。
