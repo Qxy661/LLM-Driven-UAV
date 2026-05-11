@@ -40,6 +40,8 @@ Visual Instruction Tuning
   支持中文，适合国内无人机场景
 ```
 
+> 📄 arXiv: [Visual Instruction Tuning (LLaVA)](https://arxiv.org/abs/2304.08485)
+
 ### 1.2 BLIP-2 — 高效 VLM
 
 ```
@@ -69,6 +71,8 @@ BLIP-2: Bootstrapping Language-Image Pre-training with Frozen Image Encoders and
   Q-Former 可以压缩视觉信息，适合边缘部署
 ```
 
+> 📄 arXiv: [BLIP-2: Bootstrapping Language-Image Pre-training with Frozen Image Encoders and Large Language Models](https://arxiv.org/abs/2301.12597)
+
 ### 1.3 GPT-4V — 商业 VLM 标杆
 
 ```
@@ -88,6 +92,8 @@ GPT-4V(ision) System Card
   但需要 API 调用，有延迟和成本
 ```
 
+> 📄 Report: [GPT-4V(ision) System Card](https://cdn.openai.com/papers/GPTV_System_Card.pdf)
+
 ### 1.4 Gemini — 长上下文多模态
 
 ```
@@ -105,6 +111,8 @@ Gemini: A Family of Highly Capable Multimodal Models
   超长上下文可以包含完整飞行日志
   多模态原生支持简化系统架构
 ```
+
+> 📄 arXiv: [Gemini: A Family of Highly Capable Multimodal Models](https://arxiv.org/abs/2312.11805)
 
 ---
 
@@ -140,6 +148,8 @@ RT-1: Robotics Transformer for Real-World Control at Scale
   数据驱动的方法可以应用到无人机
   但需要大量无人机飞行数据
 ```
+
+> 📄 arXiv: [RT-1: Robotics Transformer for Real-World Control at Scale](https://arxiv.org/abs/2212.06817)
 
 ### 2.2 RT-2 — VLM 直接输出动作
 
@@ -201,6 +211,8 @@ OpenVLA: An Open-Source Vision-Language-Action Model
   开源便于二次开发
 ```
 
+> 📄 arXiv: [OpenVLA: An Open-Source Vision-Language-Action Model](https://arxiv.org/abs/2406.09246)
+
 ### 2.4 Octo — 通用机器人策略
 
 ```
@@ -225,6 +237,24 @@ Octo: An Open-Source Generalist Robot Policy
 与无人机的关联:
   理论上可以迁移到无人机平台
   需要定义无人机的动作空间
+```
+
+> 📄 arXiv: [Octo: An Open-Source Generalist Robot Policy](https://arxiv.org/abs/2405.12213)
+
+**CLIP 对比学习损失函数 (核心公式):**
+
+```
+L_CLIP = -(1/N) Σ_{i=1}^{N} [ log( exp(sim(I_i, T_i)/τ) / Σ_{j=1}^{N} exp(sim(I_i, T_j)/τ) ) ]
+
+其中:
+  I_i = 第 i 个图像的嵌入向量 (image embedding)
+  T_i = 第 i 个文本的嵌入向量 (text embedding, 与 I_i 配对)
+  τ   = 温度参数 (可学习), 控制 softmax 的锐度
+  sim(I,T) = cosine(I, T) / (||I|| · ||T||) 余弦相似度
+  N   = batch size
+
+直觉: 拉近配对 (I_i, T_i) 的距离, 推远不配对 (I_i, T_j, j≠i) 的距离
+→ 这使得视觉和语言共享同一个语义空间, 是所有 VLM/VLA 的基础
 ```
 
 ---

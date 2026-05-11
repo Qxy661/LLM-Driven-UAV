@@ -59,6 +59,8 @@ Do As I Can, Not As I Say: Grounding Language in Robotic Affordances
   affordance = 飞行能力、传感器能力、电量限制
 ```
 
+> 📄 arXiv: [Do As I Can, Not As I Say: Grounding Language in Robotic Affordances](https://arxiv.org/abs/2204.01691)
+
 ### 2.2 Code as Policies — LLM 直接生成代码
 
 ```
@@ -91,6 +93,8 @@ Code as Policies: Language Model Programs for Embodied Control
   可以利用 Python 库处理复杂逻辑（如循环巡逻）
 ```
 
+> 📄 arXiv: [Code as Policies: Language Model Programs for Embodied Control](https://arxiv.org/abs/2209.07753)
+
 ### 2.3 Inner Monologue — 闭环推理
 
 ```
@@ -122,6 +126,8 @@ Inner Monologue: Embodied Reasoning through Planning with Language Models
   "飞到建筑旁" → 摄像头反馈 → "偏了，向左调整"
 ```
 
+> 📄 arXiv: [Inner Monologue: Embodied Reasoning through Planning with Language Models](https://arxiv.org/abs/2207.05608)
+
 ### 2.4 PaLM-E — 具身多模态模型
 
 ```
@@ -150,6 +156,8 @@ PaLM-E: An Embodied Multimodal Language Model
   可以直接理解无人机摄像头图像 + 语言指令
   统一模型减少了系统复杂度
 ```
+
+> 📄 arXiv: [PaLM-E: An Embodied Multimodal Language Model](https://arxiv.org/abs/2303.03378)
 
 ### 2.5 Voyager — LLM 驱动的自主探索
 
@@ -181,7 +189,96 @@ Voyager: An Open-Ended Embodied Agent with Large Language Models
   技能库可以跨任务复用
 ```
 
-### 2.6 其他重要论文
+> 📄 arXiv: [Voyager: An Open-Ended Embodied Agent with Large Language Models](https://arxiv.org/abs/2305.16291)
+
+### 2.6 关键 Prompt 模式示例
+
+#### SayCan: Affordance 加权动作选择
+
+```python
+# SayCan 核心: P(action) = P_LLM(action) × P_affordance(action)
+# LLM 提供"应该做什么", affordance 提供"能做什么"
+
+def saycan_score(llm_scores: dict, affordance_scores: dict) -> str:
+    """
+    SayCan 动作选择算法
+
+    Args:
+        llm_scores: LLM 对每个动作的评分 (语言合理性)
+        affordance_scores: 机器人对每个动作的成功率估计 (物理可行性)
+
+    Returns:
+        综合得分最高的动作
+    """
+    final_scores = {}
+    for action in llm_scores:
+        final_scores[action] = llm_scores[action] * affordance_scores[action]
+
+    best_action = max(final_scores, key=final_scores.get)
+    return best_action, final_scores
+
+# 无人机场景示例
+actions = ["fly_to_A", "hover", "land", "return_home"]
+
+# LLM 评分: 哪个动作最符合任务描述？
+# Prompt: "巡逻A区域, 电量低时返回"
+llm_scores = {
+    "fly_to_A": 0.8,
+    "hover": 0.1,
+    "land": 0.05,
+    "return_home": 0.05
+}
+
+# Affordance 评分: 机器人当前能执行吗？(电量 15%)
+affordance_scores = {
+    "fly_to_A": 0.3,    # 电量不足，成功率低
+    "hover": 0.9,       # 悬停不需要多少电
+    "land": 0.95,       # 降落总是可行的
+    "return_home": 0.95 # 返航可行
+}
+
+# 综合得分:
+# fly_to_A:     0.8  × 0.3  = 0.240  ← LLM 最推荐，但物理上不可行
+# hover:        0.1  × 0.9  = 0.090
+# land:         0.05 × 0.95 = 0.0475
+# return_home:  0.05 × 0.95 = 0.0475
+# → fly_to_A 胜出 (但得分被 affordance 压低了)
+```
+
+#### Code as Policies: LLM 生成控制代码
+
+```python
+# Code as Policies: 自然语言 → Python 代码 → 直接执行
+# 优势: 可以利用循环、条件、变量等编程结构
+
+# 用户指令: "巡逻A和B区域, 发现异常就悬停拍照"
+
+# LLM 生成的代码 (伪代码，展示 prompt → code 模式):
+def patrol_and_inspect(uav, areas: list):
+    """LLM 生成的巡逻+异常检测脚本"""
+    for area_name in areas:
+        waypoints = get_waypoints(area_name)
+
+        for i, wp in enumerate(waypoints):
+            uav.goto(wp)
+            image = uav.capture_image()
+
+            # 使用 VLM 检测异常
+            anomaly = vlm_detect(image, prompt="是否有异常情况?")
+
+            if anomaly:
+                uav.hover()
+                uav.take_photo(f"anomaly_{area_name}_{i}.jpg")
+                uav.report(f"在 {area_name} 区域发现异常: {anomaly}")
+
+    uav.return_home()
+    uav.land()
+
+# 优势: 代码可以包含复杂逻辑 (循环巡逻、条件判断、异常处理)
+# 这比纯动作序列 (goto_A → goto_B → ...) 更强大
+```
+
+### 2.7 其他重要论文
 
 | 论文 | 年份 | 核心贡献 |
 |------|------|---------|
@@ -234,6 +331,8 @@ ChatGPT for Robotics: Design Principles and Model Abilities
   这是本项目最直接的参考论文
   本项目在此基础上增加了 VLM、安全层等
 ```
+
+> 📄 arXiv: [ChatGPT for Robotics: Design Principles and Model Abilities](https://arxiv.org/abs/2306.17582)
 
 ---
 
