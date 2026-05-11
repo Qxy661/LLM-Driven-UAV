@@ -464,9 +464,83 @@ print(result["output"])
 
 ---
 
-## 6. 自主性层级
+## 6. 错误处理与重试机制
 
-### 6.1 自主性光谱
+在真实无人机场景中，LLM API 调用可能因网络波动、速率限制、服务超时等原因失败。Agent 必须具备健壮的错误处理能力，避免因单次调用失败导致整个任务中断。
+
+### 6.1 指数退避重试装饰器
+
+对于 LLM API 调用，使用指数退避（Exponential Backoff）策略自动重试瞬时错误：
+
+```python
+import time
+import logging
+from functools import wraps
+
+logger = logging.getLogger(__name__)
+
+def retry_with_backoff(max_retries=3, base_delay=1.0, max_delay=60.0):
+    """Decorator for LLM API calls with exponential backoff retry."""
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            for attempt in range(max_retries):
+                try:
+                    return func(*args, **kwargs)
+                except Exception as e:
+                    error_type = type(e).__name__
+                    if "rate_limit" in str(e).lower() or "429" in str(e):
+                        delay = min(base_delay * (2 ** attempt), max_delay)
+                        logger.warning(f"Rate limited ({error_type}), retry {attempt+1}/{max_retries} in {delay:.1f}s")
+                        time.sleep(delay)
+                    elif "timeout" in str(e).lower() or "504" in str(e):
+                        delay = min(base_delay * (2 ** attempt), max_delay)
+                        logger.warning(f"Timeout ({error_type}), retry {attempt+1}/{max_retries} in {delay:.1f}s")
+                        time.sleep(delay)
+                    elif "connection" in str(e).lower():
+                        delay = min(base_delay * (2 ** attempt), max_delay)
+                        logger.warning(f"Connection error ({error_type}), retry {attempt+1}/{max_retries} in {delay:.1f}s")
+                        time.sleep(delay)
+                    else:
+                        logger.error(f"Non-retryable error: {error_type}: {e}")
+                        raise
+            logger.error(f"All {max_retries} retries exhausted")
+            raise Exception(f"Max retries ({max_retries}) exceeded for {func.__name__}")
+        return wrapper
+    return decorator
+
+# Usage example with safe JSON parsing
+import json
+
+def safe_llm_json(prompt, default=None):
+    """Call LLM and parse JSON response with fallback."""
+    try:
+        response = llm_client.generate(prompt)
+        return json.loads(response)
+    except json.JSONDecodeError:
+        logger.warning(f"JSON parse failed, using default")
+        return default or {"action": "hover", "confidence": 0.0}
+```
+
+### 6.2 错误分类与处理策略
+
+在无人机 Agent 中，不同类型的错误需要不同的处理策略：
+
+| 错误类型 | 示例 | 是否可重试 | 处理策略 |
+|---------|------|-----------|---------|
+| 速率限制 | HTTP 429 | 是 | 指数退避重试 |
+| 服务超时 | HTTP 504 / Timeout | 是 | 指数退避重试 |
+| 网络中断 | ConnectionError | 是 | 退避重试 + 切换备用链路 |
+| 参数错误 | HTTP 400 | 否 | 修正参数后重试 |
+| 认证失败 | HTTP 401 | 否 | 刷新凭证 |
+| 模型输出异常 | JSON 解析失败 | 是 | 重新生成 + 更严格提示 |
+| 未知错误 | 其他异常 | 视情况 | 记录日志 + 降级处理 |
+
+---
+
+## 7. 自主性层级
+
+### 7.1 自主性光谱
 
 ```
 完全手动                                                      完全自主
@@ -478,7 +552,7 @@ print(result["output"])
   全程手动   部分辅助    人工监督    人类审批    人类监控    自主进化
 ```
 
-### 6.2 LLM Agent 的自主性级别
+### 7.2 LLM Agent 的自主性级别
 
 | 级别 | 描述 | LLM 角色 | 人类角色 |
 |------|------|---------|---------|
